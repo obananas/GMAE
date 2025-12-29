@@ -122,6 +122,8 @@ fscore_cluster = cluster_Fscore(Y_ndarray, Y_pre)
 recall_cluster = cluster_recall(Y_ndarray, Y_pre)
 ```
 
+More details, along with detailed comments in the code, can be found in **utils/metric.py**.
+
 ## 4. Network
 
 The **Generalized Multi-view Autoencoder (GMAE)** is a model designed to process multi-view data, where each view represents a different perspective or modality of the data. The model consists of several key components: **Encoder**, **Decoder**, **Discriminator**, and the **GMAE Model** itself, which integrates these components to learn both shared and view-specific representations.
