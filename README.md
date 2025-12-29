@@ -143,8 +143,6 @@ The **GMAE Model** integrates all the components: it uses individual encoders an
 All experiments were conducted using Python 3.8.15 and PyTorch 1.13.1+cu116 on a Windows PC equipped with an AMD Ryzen 9 5900HX CPU, 32GB RAM, and an Nvidia RTX 3080 GPU (16GB). 
 
 
-Multi-View Clustering Code Framework
-
  **⚙️Requirements**
 
 - python==3.8.15
