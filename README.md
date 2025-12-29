@@ -137,3 +137,22 @@ The **Discriminator** is used in adversarial training to help distinguish betwee
 
 (4) GMAE Model
 The **GMAE Model** integrates all the components: it uses individual encoders and decoders for each view, while also maintaining a shared encoder for common features across all views. Discriminators are used for each view to guide the learning process. After obtaining the shared and view-specific representations, the model concatenates them and uses a classifier to make final predictions.
+
+## 5. 💻User Guide
+
+All experiments were conducted using Python 3.8.15 and PyTorch 1.13.1+cu116 on a Windows PC equipped with an AMD Ryzen 9 5900HX CPU, 32GB RAM, and an Nvidia RTX 3080 GPU (16GB). 
+
+
+Multi-View Clustering Code Framework
+
+ **⚙️Requirements**
+
+- python==3.8.15
+
+- pytorch==1.13.1
+  
+- numpy==1.21.6
+
+- scikit-learn==1.0
+
+- scipy==1.10.1
