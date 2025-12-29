@@ -1,6 +1,7 @@
 # GMAE
 Source code of "Learning Disentangled Representations for Generalized Multi-view Clustering"
 
+```shell
 GMAE-Github
 ├── 1.logs_classification # 分类任务的日志与图像文件
 ├── 2.imgs_classification 
@@ -17,6 +18,7 @@ GMAE-Github
 ├── loss.py # 损失函数（部分）定义
 ├── models.py # 模型定义
 └── external # 外部库
+```
 
 ## 1. Dataset
 It can be got from: https://github.com/wangsiwei2010/awesome-multi-view-clustering
@@ -93,7 +95,7 @@ parser.add_argument('--missing_ratio', default=0.0, type=float, help='Missing ra
 
 ## 4. Metrics
 
-The evaluation metrics derived from the test outputs for each dataset are meticulously stored in respective files within the logs directory. Concurrently, comprehensive dataset metadata, including pertinent details, is systematically logged and preserved in 1.logs/datasetInfo.csv, ensuring an easy archival and retrieval process.
+The evaluation metrics derived from the test outputs for each dataset are meticulously stored in respective files within the logs directory. Concurrently, comprehensive dataset metadata, including pertinent details, is systematically logged and preserved in 1.logs/datasetInfo.csv, ensuring an easy archival and retrieval process. In our paper, the following four metrics were selected for evaluation: accuracy (ACC), normalized mutual information (NMI), adjusted Rand index (ARI), and purity (Purity).
 
 ```py
 # TODO 1.计算准确率 (ACC)
