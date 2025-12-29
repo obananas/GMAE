@@ -1,20 +1,19 @@
 import torch
 
 
-def contrastive_loss(args, hidden, nbr_idx, neg_idx, train_idx):
+def contrastive_loss(args, hidden, nbr_idx, neg_idx, idx):
     if not args.do_contrast:
         return 0
     loss_con = 0
-    for i in range(len(train_idx)):
-        index = train_idx[i]
-        if int(index) < len(train_idx) - 1:
-            hidden_positive = hidden[nbr_idx[index]]
-            positive = torch.exp(torch.cosine_similarity(hidden[i].unsqueeze(0), hidden_positive.detach()))
-            hidden_negative = hidden[neg_idx[index]]
-            negative = torch.exp(torch.cosine_similarity(hidden[i].unsqueeze(0), hidden_negative.detach())).sum()
-            loss_con -= torch.log((positive / negative)).sum()
-            torch.cuda.empty_cache()
-    return loss_con / len(train_idx)
+    for i in range(len(idx)):
+        index = idx[i]
+        hidden_positive = hidden[nbr_idx[index]]
+        positive = torch.exp(torch.cosine_similarity(hidden[i].unsqueeze(0), hidden_positive.detach()))
+        hidden_negative = hidden[neg_idx[index]]
+        negative = torch.exp(torch.cosine_similarity(hidden[i].unsqueeze(0), hidden_negative.detach())).sum()
+        loss_con -= torch.log((positive / negative)).sum()
+        torch.cuda.empty_cache()
+    return loss_con / len(idx)
 
 
 def orthogonal_loss(shared, specific):

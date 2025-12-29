@@ -89,7 +89,7 @@ def cluster_Fscore(true_labels, pred_labels):
     return fscore
 
 
-# TODO 5.1计算召回率(recall)
+# TODO 6.1计算召回率(recall)
 def cluster_recall(true_labels, pred_labels):
     # 计算混淆矩阵
     num_classes = max(np.max(true_labels), np.max(pred_labels)) + 1
@@ -103,7 +103,7 @@ def cluster_recall(true_labels, pred_labels):
     return total_recall
 
 
-# TODO 5.2 precision
+# TODO 6.2 precision
 def cluster_precision(true_labels, predicted_labels):
     """
     计算聚类的查准率（Precision）。
@@ -155,9 +155,9 @@ def compute_metric(Y_ndarray, Y_pre):
     fscore_cluster = cluster_Fscore(Y_ndarray, Y_pre)
     # print("5.[Fscore_cluster.py]:{:.5f}".format(fscore_cluster))
 
-    # TODO 5.1 recall
+    # TODO 6.1 recall
     recall_cluster = cluster_recall(Y_ndarray, Y_pre)
-    # TODO 5.2 precision
+    # TODO 6.2 precision
     precision_cluster = cluster_precision(Y_ndarray, Y_pre)
 
-    return acc_cluster, nmi_cluster, pur_cluster, ari_cluster, fscore_cluster, precision_cluster, recall_cluster
+    return float(acc_cluster), float(nmi_cluster), float(pur_cluster), float(ari_cluster), float(fscore_cluster), float(precision_cluster), float(recall_cluster)

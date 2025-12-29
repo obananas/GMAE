@@ -10,7 +10,7 @@ from sklearn.neighbors import NearestNeighbors
 from torch.utils.data import DataLoader, Subset
 from tqdm import tqdm
 from loss import orthogonal_loss, contrastive_loss
-from models import GMAEModel
+from models import GMAE
 from utils import Logger
 from utils.dataloader import dataset_with_info
 from utils.metric import compute_metric
@@ -66,14 +66,14 @@ if __name__ == '__main__':
     # 使用argparse解析命令行超参数
     # ===================================================================
     parser = argparse.ArgumentParser(description='GMAE Model Training')
-    parser.add_argument('--log_path', default='1.logs_classification', type=str, help='Path to save logs')
-    parser.add_argument('--img_path', default='2.imgs_classification', type=str, help='Path to save imgs')
+    parser.add_argument('--logs_path', default='1.logs_classification', type=str, help='Path to save logs')
+    parser.add_argument('--imgs_path', default='2.imgs_classification', type=str, help='Path to save imgs')
     parser.add_argument('--folder_path', default='dataset', type=str, help='Dataset folder path')
     parser.add_argument('--do_plot', default=True, type=bool, help='Whether to plot the results')
     parser.add_argument('--device', default='cuda:0', type=str, help='Device to use for training')
     # TODO 1.超参数
     parser.add_argument('--train_epoch', default=500, type=int, help='Number of training epochs') # 500
-    parser.add_argument('--eval_interval', default=10, type=int, help='Interval for evaluation')
+    parser.add_argument('--eval_interval', default=100, type=int, help='Interval for evaluation')
     parser.add_argument('--seed', default=42, type=int, help='Random seed')
     parser.add_argument('--lr', default=0.001, type=float, help='Learning rate')
     parser.add_argument('--feature_dim', default=128, type=int, help='Feature dimensions')
@@ -92,16 +92,16 @@ if __name__ == '__main__':
     # ===================================================================
     # 创建日志目录
     # ===================================================================
-    if not os.path.exists(args.log_path):
-        os.makedirs(args.log_path)
-        print("Logs directory created at:", args.log_path)
+    if not os.path.exists(args.logs_path):
+        os.makedirs(args.logs_path)
+        print("Logs directory created at:", args.logs_path)
     else:
-        print("Logs directory already exists at:", args.log_path)
+        print("Logs directory already exists at:", args.logs_path)
 
     # ===================================================================
     # 创建并写入数据集信息的CSV文件
     # ===================================================================
-    file_datasetInfo = f'{args.log_path}/datasetInfo.csv'
+    file_datasetInfo = f'{args.logs_path}/datasetInfo.csv'
     headers = ['Dataname', 'number of data', 'views', 'clusters', 'each view']
     with open(file_datasetInfo, 'a', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
@@ -119,7 +119,7 @@ if __name__ == '__main__':
             print(f'----------------------------------{dataset_name}[{data_iter}]----------------------------------')
 
             # 初始化日志记录器
-            logger = Logger.get_logger(__file__, dataset_name, args.log_path)
+            logger = Logger.get_logger(__file__, dataset_name, args.logs_path)
 
             # 获取数据集信息
             dataset, ins_num, view_num, nc, input_dims, _ = dataset_with_info(
@@ -184,7 +184,7 @@ if __name__ == '__main__':
             # ===================================================================
             device = args.device
             h_dims = [500, 200]
-            model = GMAEModel(input_dims, view_num, args.feature_dim, h_dims, nc).to(device)
+            model = GMAE(input_dims, view_num, args.feature_dim, h_dims, nc).to(device)
             mse_loss_fn = nn.MSELoss()
             optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
@@ -197,6 +197,7 @@ if __name__ == '__main__':
             # 训练过程
             # ===================================================================
             for epoch in tqdm(range(args.train_epoch)):
+                epoch_loss = 0.0
                 criterion = nn.CrossEntropyLoss()
                 for x, y, train_idx, pu in train_loader:
                     optimizer.zero_grad()
@@ -226,6 +227,8 @@ if __name__ == '__main__':
                                 loss_mi + loss_ad) + args.lambda_con * loss_con + loss_class
                     total_loss.backward()
                     optimizer.step()
+                    epoch_loss += total_loss.item()
+                print(f'\nTotal loss [Classification]: {epoch_loss}')
 
                 # 每隔eval_interval轮进行评估
                 if (epoch + 1) % args.eval_interval == 0:
