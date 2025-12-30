@@ -50,9 +50,7 @@ def prepare_neighbors(dataset, ins_num, view_num):
     return nbr_idx, neg_idx
 
 
-def train_one_epoch(args, model, mse_loss_fn, optimizer, dataset, ins_num, view_num, nbr_idx, neg_idx, epoch, device):
-    train_loader = DataLoader(dataset, batch_size=ins_num, shuffle=True)
-
+def train_one_epoch(args, model, mse_loss_fn, optimizer, view_num, nbr_idx, neg_idx, train_loader, device):
     for x, y, idx, pu in train_loader:
         optimizer.zero_grad()
         model.train()
@@ -74,9 +72,7 @@ def train_one_epoch(args, model, mse_loss_fn, optimizer, dataset, ins_num, view_
         optimizer.step()
 
 
-def evaluate_model(model, dataset, nc, ins_num, view_num, device):
-    test_loader = DataLoader(dataset, batch_size=ins_num, shuffle=False)
-
+def evaluate_model(model, nc, view_num, test_loader, device):
     with torch.no_grad():
         for x, y, idx, pu in test_loader:
             for v in range(view_num):
@@ -100,7 +96,7 @@ if __name__ == '__main__':
     parser.add_argument('--do_plot', default=True, type=bool, help='Whether to plot the results')
     parser.add_argument('--device', default='cuda:0', type=str, help='Device to use for training')
     # TODO 1.超参数
-    parser.add_argument('--train_epoch', default=500, type=int, help='Number of training epochs') # 500
+    parser.add_argument('--train_epoch', default=500, type=int, help='Number of training epochs')
     parser.add_argument('--eval_interval', default=10, type=int, help='Interval for evaluation')
     parser.add_argument('--seed', default=42, type=int, help='Random seed')
     parser.add_argument('--lr', default=0.001, type=float, help='Learning rate')
@@ -151,13 +147,21 @@ if __name__ == '__main__':
             nbr_idx, neg_idx = prepare_neighbors(dataset, ins_num, view_num)
             acc_list, nmi_list, pur_list, ari_list = [], [], [], []
 
+            # ===================================================================
+            # TODO 聚类无法使用真实标签 训练集和测试集通常一致
+            # ===================================================================
+            test_loader = DataLoader(dataset, batch_size=ins_num, shuffle=False)
+            train_loader = DataLoader(dataset, batch_size=ins_num, shuffle=False)
+
+            # ===================================================================
+            # 训练过程
+            # ===================================================================
             for epoch in tqdm(range(args.train_epoch)):
-                train_one_epoch(args, model, mse_loss_fn, optimizer, dataset, ins_num, view_num, nbr_idx, neg_idx,
-                                epoch, args.device)
+                train_one_epoch(args, model, mse_loss_fn, optimizer, view_num, nbr_idx, neg_idx, train_loader, args.device)
 
                 # 每隔 `eval_interval` 轮测试一次
                 if (epoch + 1) % args.eval_interval == 0:
-                    acc, nmi, pur, ari, _, _, _ = evaluate_model(model, dataset, nc, ins_num, view_num, args.device)
+                    acc, nmi, pur, ari, _, _, _ = evaluate_model(model, nc, view_num, test_loader, args.device)
                     acc_list.append(acc)
                     nmi_list.append(nmi)
                     pur_list.append(pur)
@@ -166,6 +170,9 @@ if __name__ == '__main__':
                     info = {"epoch": epoch + 1, "acc": acc, "nmi": nmi, "ari": ari, "pur": pur}
                     logger.info(str(info))
 
+            # ===================================================================
+            # 绘图
+            # ===================================================================
             plot_metric(acc_list, dataset_name, 'acc', args.imgs_path)
             plot_metric(nmi_list, dataset_name, 'nmi', args.imgs_path)
             plot_metric(pur_list, dataset_name, 'pur', args.imgs_path)

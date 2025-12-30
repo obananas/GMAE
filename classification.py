@@ -72,7 +72,7 @@ if __name__ == '__main__':
     parser.add_argument('--do_plot', default=True, type=bool, help='Whether to plot the results')
     parser.add_argument('--device', default='cuda:0', type=str, help='Device to use for training')
     # TODO 1.超参数
-    parser.add_argument('--train_epoch', default=500, type=int, help='Number of training epochs') # 500
+    parser.add_argument('--train_epoch', default=200, type=int, help='Number of training epochs')
     parser.add_argument('--eval_interval', default=10, type=int, help='Interval for evaluation')
     parser.add_argument('--seed', default=42, type=int, help='Random seed')
     parser.add_argument('--lr', default=0.001, type=float, help='Learning rate')
@@ -134,7 +134,7 @@ if __name__ == '__main__':
             dataset.addNoise(index, args.ratio_noise, sigma=0.5)  # 添加噪声
 
             # ===================================================================
-            # 随机划分训练集和测试集
+            # TODO 随机划分训练集和测试集
             # ===================================================================
             split_seed = int.from_bytes(os.urandom(8), "little")
             rng_split = np.random.default_rng(split_seed)
@@ -142,10 +142,10 @@ if __name__ == '__main__':
             rng_split.shuffle(index_dataset)
             split = int(0.8 * ins_num)
             train_index, test_index = index_dataset[:split], index_dataset[split:]
-
-            # 设置DataLoader，提供训练数据和测试数据
+            # 设置训练过程的随机种子
             g = torch.Generator()
-            g.manual_seed(args.seed)  # 设置训练过程的随机种子
+            g.manual_seed(args.seed)
+            # 设置DataLoader，提供训练数据和测试数据
             train_loader = DataLoader(Subset(dataset, train_index), batch_size=split, shuffle=True, generator=g)
             test_loader = DataLoader(Subset(dataset, test_index), batch_size=ins_num - split, shuffle=False)
 
@@ -180,17 +180,13 @@ if __name__ == '__main__':
             neg_idx = torch.cat(neg_idx, dim=-1)
 
             # ===================================================================
-            # 选择训练设备（GPU或CPU）
+            # 选择训练设备(GPU或CPU)记录性能指标
             # ===================================================================
             device = args.device
             h_dims = [500, 200]
             model = GMAE(input_dims, view_num, args.feature_dim, h_dims, nc).to(device)
             mse_loss_fn = nn.MSELoss()
             optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-
-            # ===================================================================
-            # 记录性能指标
-            # ===================================================================
             acc_list, nmi_list, pur_list, ari_list = [], [], [], []
 
             # ===================================================================
