@@ -7,12 +7,14 @@ def contrastive_loss(args, hidden, nbr_idx, neg_idx, idx):
     loss_con = 0
     for i in range(len(idx)):
         index = idx[i]
-        hidden_positive = hidden[nbr_idx[index]]
-        positive = torch.exp(torch.cosine_similarity(hidden[i].unsqueeze(0), hidden_positive.detach()))
-        hidden_negative = hidden[neg_idx[index]]
-        negative = torch.exp(torch.cosine_similarity(hidden[i].unsqueeze(0), hidden_negative.detach())).sum()
-        loss_con -= torch.log((positive / negative)).sum()
-        torch.cuda.empty_cache()
+        # TODO 聚类没问题，但分类必须要： int(index) < len(idx) - 1
+        if int(index) < len(idx) - 1:
+            hidden_positive = hidden[nbr_idx[index]]
+            positive = torch.exp(torch.cosine_similarity(hidden[i].unsqueeze(0), hidden_positive.detach()))
+            hidden_negative = hidden[neg_idx[index]]
+            negative = torch.exp(torch.cosine_similarity(hidden[i].unsqueeze(0), hidden_negative.detach())).sum()
+            loss_con -= torch.log((positive / negative)).sum()
+            torch.cuda.empty_cache()
     return loss_con / len(idx)
 
 

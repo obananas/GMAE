@@ -74,7 +74,7 @@ def train_one_epoch(args, model, mse_loss_fn, optimizer, dataset, ins_num, view_
         optimizer.step()
 
 
-def evaluate_model(args, model, dataset, nc, ins_num, view_num, epoch, device):
+def evaluate_model(model, dataset, nc, ins_num, view_num, device):
     test_loader = DataLoader(dataset, batch_size=ins_num, shuffle=False)
 
     with torch.no_grad():
@@ -87,36 +87,6 @@ def evaluate_model(args, model, dataset, nc, ins_num, view_num, epoch, device):
             label = np.array(y)
             ACC, NMI, Purity, ARI, F_score, Precision, Recall = compute_metric(label, y_pred)
             return ACC, NMI, Purity, ARI, F_score, Precision, Recall
-
-
-def train_and_evaluate_model(args, dataset_name, dataset, ins_num, view_num, nc, input_dims, logger):
-
-    model = GMAE_MVC(input_dims, view_num, args.feature_dim, h_dims=[500, 200]).to(args.device)
-    mse_loss_fn = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-
-    nbr_idx, neg_idx = prepare_neighbors(dataset, ins_num, view_num)
-    acc_list, nmi_list, pur_list, ari_list = [], [], [], []
-
-    for epoch in tqdm(range(args.train_epoch)):
-        train_one_epoch(args, model, mse_loss_fn, optimizer, dataset, ins_num, view_num, nbr_idx, neg_idx,
-                        epoch, args.device)
-
-        # 每隔 `eval_interval` 轮测试一次
-        if (epoch + 1) % args.eval_interval == 0:
-            acc, nmi, pur, ari, _, _, _ = evaluate_model(args, model, dataset, nc, ins_num, view_num, epoch,args.device)
-            acc_list.append(acc)
-            nmi_list.append(nmi)
-            pur_list.append(pur)
-            ari_list.append(ari)
-
-            info = {"epoch": epoch + 1,"acc": acc,"nmi": nmi,"ari": ari,"pur": pur}
-            logger.info(str(info))
-
-    plot_acc(acc_list, dataset_name, 'acc', args.imgs_path)
-    plot_acc(nmi_list, dataset_name, 'nmi', args.imgs_path)
-    plot_acc(pur_list, dataset_name, 'pur', args.imgs_path)
-    plot_acc(ari_list, dataset_name, 'ari', args.imgs_path)
 
 
 if __name__ == '__main__':
@@ -174,7 +144,32 @@ if __name__ == '__main__':
             dataset, ins_num, view_num, nc, input_dims, _ = dataset_with_info(
                 dataset_name, file_datasetInfo, args.folder_path)
 
-            train_and_evaluate_model(args, dataset_name, dataset, ins_num, view_num, nc, input_dims, logger)
+            model = GMAE_MVC(input_dims, view_num, args.feature_dim, h_dims=[500, 200]).to(args.device)
+            mse_loss_fn = nn.MSELoss()
+            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+
+            nbr_idx, neg_idx = prepare_neighbors(dataset, ins_num, view_num)
+            acc_list, nmi_list, pur_list, ari_list = [], [], [], []
+
+            for epoch in tqdm(range(args.train_epoch)):
+                train_one_epoch(args, model, mse_loss_fn, optimizer, dataset, ins_num, view_num, nbr_idx, neg_idx,
+                                epoch, args.device)
+
+                # 每隔 `eval_interval` 轮测试一次
+                if (epoch + 1) % args.eval_interval == 0:
+                    acc, nmi, pur, ari, _, _, _ = evaluate_model(model, dataset, nc, ins_num, view_num, args.device)
+                    acc_list.append(acc)
+                    nmi_list.append(nmi)
+                    pur_list.append(pur)
+                    ari_list.append(ari)
+
+                    info = {"epoch": epoch + 1, "acc": acc, "nmi": nmi, "ari": ari, "pur": pur}
+                    logger.info(str(info))
+
+            plot_acc(acc_list, dataset_name, 'acc', args.imgs_path)
+            plot_acc(nmi_list, dataset_name, 'nmi', args.imgs_path)
+            plot_acc(pur_list, dataset_name, 'pur', args.imgs_path)
+            plot_acc(ari_list, dataset_name, 'ari', args.imgs_path)
         else:
             print(f'Non-MAT file. Please convert the dataset to multi-view one-dimensional MAT format.')
         data_iter += 1

@@ -2,61 +2,79 @@ import torch
 import torch.nn as nn
 
 
+# 编码器（Encoder）类
 class Encoder(nn.Module):
     def __init__(self, dims):
         super(Encoder, self).__init__()
-        self.dims = dims
+        self.dims = dims # (4层)编码器各layer的维度列表 [(view) input dims, 500, 200, 128]
         models = []
+        # 1. 构建编码器的各层
         for i in range(len(self.dims) - 1):
             models.append(nn.Linear(self.dims[i], self.dims[i + 1]))
+            # 2. 对1,2,4层应用 ReLU 激活函数
             if i != len(self.dims) - 2:
                 models.append(nn.ReLU())
+            # 3. 第3层使用 Dropout 防止过拟合
             else:
                 models.append(nn.Dropout(p=0.5))
+                # 归一化潜在表示和稳定训练：避免某些视图在损失函数计算时占主导地位
                 models.append(nn.Softmax(dim=1))
         self.models = nn.Sequential(*models)
 
     def forward(self, X):
+        # 前向传播：通过顺序模型传递数据
         return self.models(X)
 
 
+# 解码器（Decoder）类
 class Decoder(nn.Module):
-    def __init__(self, dims):
+    def __init__(self, dims): # (4层)解码器各layer的维度列表 [256, 200, 500, (view) input dims]
         super(Decoder, self).__init__()
         self.dims = dims
         models = []
+        # 1. 构建解码器的各层
         for i in range(len(self.dims) - 1):
-            models.append(nn.Linear(self.dims[i], self.dims[i + 1]))
+            models.append(nn.Linear(self.dims[i], self.dims[i + 1])) # 添加全连接层
+            # 2. 对第3层使用 Dropout 防止过拟合
             if i == len(self.dims) - 2:
                 models.append(nn.Dropout(p=0.5))
-                models.append(nn.Sigmoid())
+                models.append(nn.Sigmoid()) # 输出(0-1)概率
+            # 3. 对1,2,4层应用 ReLU 激活函数
             else:
                 models.append(nn.ReLU())
         self.models = nn.Sequential(*models)
 
     def forward(self, X):
+        # 前向传播：通过顺序模型传递数据
         return self.models(X)
 
 
+# 判别器（Discriminator）类
 class Discriminator(nn.Module):
     def __init__(self, input_dim, feature_dim=64):
         super(Discriminator, self).__init__()
-        self.input_dim = input_dim
-        self.feature_dim = feature_dim
+        self.input_dim = input_dim # 输入维度
+        self.feature_dim = feature_dim # 特征维度
+        # 1. 定义判别器的网络结构
         self.discriminator = nn.Sequential(
-            nn.Linear(self.input_dim, self.feature_dim),
-            nn.LeakyReLU(),
-            nn.Linear(self.feature_dim, 1),
-            nn.Sigmoid()
+            nn.Linear(self.input_dim, self.feature_dim), # 输入层到隐藏层
+            nn.LeakyReLU(), # 激活函数
+            nn.Linear(self.feature_dim, 1), # 输出层
+            nn.Sigmoid() # 输出(0-1)概率
         )
 
     def forward(self, x):
+        # 前向传播：通过顺序模型传递数据
         return self.discriminator(x)
 
 
+# 计算判别器的损失函数
 def discriminator_loss(real_out, fake_out, lambda_dis=1):
+    # 1. 计算真实样本损失，目标是 1
     real_loss = nn.BCEWithLogitsLoss()(real_out, torch.ones_like(real_out))
+    # 2. 计算假样本损失，目标是 0
     fake_loss = nn.BCEWithLogitsLoss()(fake_out, torch.zeros_like(fake_out))
+    # 3. 返回总损失，乘以超参数 lambda_dis
     return lambda_dis * (real_loss + fake_loss)
 
 
