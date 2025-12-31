@@ -61,7 +61,7 @@ This section defines hyperparameters related to the training process, such as th
 
 ```py
 # Number of training epochs
-parser.add_argument('--train_epoch', default=500, type=int, help='Number of training epochs')  # 500 epochs
+parser.add_argument('--train_epoch', default=500, type=int, help='Number of training epochs') 
 # Interval for evaluation
 parser.add_argument('--eval_interval', default=10, type=int, help='Interval for evaluation')
 # Random seed for reproducibility
@@ -95,7 +95,7 @@ parser.add_argument('--missing_ratio', default=0.0, type=float, help='Missing ra
 
 ## 3. Loss
 
-
+Integrating the reconstruction loss, the correlation loss, the generative adversarial loss, with the cross-entropy loss in, the objective function of our proposed GMAE is formulated as:
 
 ```py
 # 1.loss_rec：重建损失，约束自编码器的特征提取
