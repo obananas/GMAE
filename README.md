@@ -58,7 +58,7 @@ GMAE-Github
 ```
 
 ## 1. 📊Dataset
-It can be got from: [https://github.com/wangsiwei2010/awesome-multi-view-clustering](https://pan.baidu.com/s/1ZNRFabJirILkGZNymHCq2w?pwd=GMAE)
+It can be got from: https://pan.baidu.com/s/1ZNRFabJirILkGZNymHCq2w?pwd=GMAE
 
 ## 2. ✅Run
 (1) To run the **multi-view clustering** task, use the following command:
